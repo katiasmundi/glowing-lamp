@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database User Management</title>
+    <script>
+        // Function to add a user
+        async function addUser() {
+            const nimimerkki = document.getElementById("nimimerkki").value;
+            const ammatti = document.getElementById("ammatti").value;
+            const pituus = document.getElementById("pituus").value;
+
+            const response = await fetch('/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nimimerkki, ammatti, pituus })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+            loadUsers();
+        }
+
+        // Function to load all users from the database
+        async function loadUsers() {
+            const response = await fetch('/users');
+            const data = await response.json();
+
+            const userList = document.getElementById("user-list");
+            userList.innerHTML = '';
+
+            data.users.forEach(user => {
+                const li = document.createElement("li");
+                li.innerHTML = `${user.id}: ${user.nimimerkki}, ${user.ammatti}, ${user.pituus} 
+                <button onclick="deleteUser(${user.id})">Delete</button> 
+                <button onclick="editUser(${user.id}, '${user.nimimerkki}', '${user.ammatti}', '${user.pituus}')">Edit</button>`;
+                userList.appendChild(li);
+            });
+        }
+
+        // Function to delete a user
+        async function deleteUser(id) {
+            const response = await fetch(`/delete-user/${id}`, { method: 'DELETE' });
+            const data = await response.json();
+            alert(data.message);
+            loadUsers();
+        }
+
+        // Function to edit a user
+        function editUser(id, nimimerkki, ammatti, pituus) {
+            document.getElementById("edit-id").value = id;
+            document.getElementById("edit-nimimerkki").value = nimimerkki;
+            document.getElementById("edit-ammatti").value = ammatti;
+            document.getElementById("edit-pituus").value = pituus;
+            document.getElementById("edit-user-form").style.display = 'block';
+        }
+
+        // Function to update a user
+        async function updateUser() {
+            const id = document.getElementById("edit-id").value;
+            const nimimerkki = document.getElementById("edit-nimimerkki").value;
+            const ammatti = document.getElementById("edit-ammatti").value;
+            const pituus = document.getElementById("edit-pituus").value;
+
+            const response = await fetch(`/update-user/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nimimerkki, ammatti, pituus })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+            loadUsers();
+            document.getElementById("edit-user-form").style.display = 'none';
+        }
+
+        // Load the users when the page loads
+        window.onload = loadUsers;
+    </script>
+</head>
+<body>
+    <h1>User Management</h1>
+
+    <!-- Form to Add a User -->
+    <h2>Add User</h2>
+    <input type="text" id="nimimerkki" placeholder="Nickname">
+    <input type="text" id="ammatti" placeholder="Profession">
+    <input type="text" id="pituus" placeholder="Height">
+    <button onclick="addUser()">Add User</button>
+
+    <!-- Form to Edit a User -->
+    <h2>Edit User</h2>
+    <div id="edit-user-form" style="display:none;">
+        <input type="hidden" id="edit-id">
+        <input type="text" id="edit-nimimerkki" placeholder="Nickname">
+        <input type="text" id="edit-ammatti" placeholder="Profession">
+        <input type="text" id="edit-pituus" placeholder="Height">
+        <button onclick="updateUser()">Update User</button>
+    </div>
+
+    <h3>Users List</h3>
+    <ul id="user-list"></ul>
+
+</body>
+</html>
